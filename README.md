@@ -45,3 +45,9 @@ Example below is set to create the AMI every day
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/3-b-5dayRetention-Everyday.png)
 
 Save the settings that are approriate for this instance and then save the tags. Please repeat steps 1-3 for all instances that you like to be included.
+
+## Notes
+
+- This is another open source project bought to you by [Webdigi - Web development, London](https://www.webdigi.co.uk/).
+- Please submit your pull requests or suggestions to improve this script.
+- You can read about updates to this project on our blog - [AWS Instance Automated AMI Creation & Deletion System](https://www.webdigi.co.uk/blog/2017/aws-instance-automated-ami-creation-deletion-system/)
