@@ -10,6 +10,7 @@ Creating an AMI automatically snapshots all the associated EBS volumes for that 
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/1-lambda-select-blank.png)
 
 2) Select "CloudWatch Events - Schedule" and click Next
+
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/2-select-cloudwatch-events-lambda.png)
 
 3) Select a schedule you like to setup. Ideally the script has to run every day
