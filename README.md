@@ -36,7 +36,7 @@ Creating an AMI automatically snapshots all the associated EBS volumes for that 
 3) Set the three tags with the following Keys & Value
     a) Key: AutoDigiBackup with Value: yes. This marks the instances that need to be backed up.
     b) Key: AutoDigiBackupRetentionDays with Value: from 1 to as many days as you want the backup to be stored.
-    c) Key: AutoDigiBackupSchedule with Value: * (for every day) or a mix of number from 0 (Saturday), 1 (Monday) and all the way to 6 (Sunday). You can set value to say 012 which means run on Saturday, Monday and Tuesday. You can set just 6 to run only on Sunday.
+    c) Key: AutoDigiBackupSchedule with Value: * (for every day) or a mix of number from 0 (Sunday), 1 (Monday) and all the way to 6 (Saturday). You can set value to say 012 which means run on Sunday, Monday and Tuesday. You can set just 6 to run only on Saturday.
     
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/3-a-5dayRetension-1234DaysRun.png)
 
