@@ -4,6 +4,8 @@ A simple AWS lambda project to help automate creation and deletion of AMIs. The 
 ## Motivation
 Creating an AMI automatically snapshots all the associated EBS volumes for that instance. This makes instance recovery much more reliable and faster. A daily or weekly backup schedule is recommended for instances and to make sure you have a backup if ever needed. The system also removes the automatically created AMIs and any associated snapshots as per the settings.
 
+Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag AutoDigiNoReboot with value true if want to avoid rebooting that instance.
+
 ## Setup / Installation of the Lambda script (one time setup)
 
 1) Setting up the Lambda script by opening the Lambda console
