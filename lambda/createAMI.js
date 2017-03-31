@@ -6,9 +6,10 @@ var ec2 = new aws.EC2();
 //Variables for the script
 //Changes below are not required but if you do change, then change to match delete and create lambda scripts.
 const keyForEpochMakerinAMI = "DATETODEL-";
-const keyForInstanceTagToBackup = "AutoDigiBackup"; 
-const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionDays"; 
+const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
+const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionDays"; //accepts numbers like 5 or 10 or 22 and so on.
 const keyForInstanceTagScheduledDays = "AutoDigiBackupSchedule"; //accepts day of week * / 0,1,2,3,4,5,6
+const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
 
 //returns true or false based on tag value 
 function checkIfBackupNeedsToRunToday(tagScheduleDays){
@@ -41,7 +42,7 @@ exports.handler = function(event, context) {
             for (var i in data.Reservations) {
                 for (var j in data.Reservations[i].Instances) {
                     var instanceid = data.Reservations[i].Instances[j].InstanceId;
-                    var name = "", backupRetentionDaysforAMI = -1, backupRunTodayCheck = "";
+                    var name = "", backupRetentionDaysforAMI = -1, backupRunTodayCheck = "", noReboot = false;
                     for (var k in data.Reservations[i].Instances[j].Tags) {
                         if (data.Reservations[i].Instances[j].Tags[k].Key == 'Name') {
                             name = data.Reservations[i].Instances[j].Tags[k].Value;
@@ -51,6 +52,11 @@ exports.handler = function(event, context) {
                         }
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagScheduledDays){
                             backupRunTodayCheck = data.Reservations[i].Instances[j].Tags[k].Value;
+                        }         
+                        if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagNoReboot){
+                            if(data.Reservations[i].Instances[j].Tags[k].Value == "true"){
+                                noReboot = true;
+                            }
                         }                        
                     }
                     //cant find when to delete then dont proceed.
@@ -63,8 +69,11 @@ exports.handler = function(event, context) {
                         var imageparams = {
                             InstanceId: instanceid,
                             Name: name + "_" + keyForEpochMakerinAMI + genDate.getTime(),
-                            // NoReboot: true
+                            // NoReboot: true - Decided based on parameter from tag
                         };
+                        if(noReboot == true){
+                            imageparams["NoReboot"] = true;
+                        }
                         console.log(imageparams);
                         ec2.createImage(imageparams, function(err, data) {
                             if (err) console.log(err, err.stack);
