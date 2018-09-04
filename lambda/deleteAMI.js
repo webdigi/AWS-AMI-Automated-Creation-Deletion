@@ -73,7 +73,9 @@ ec2.describeImages({
                 imagename = data.Images[j].Name
                 if (checkIfAMIneedsDeleting(imagename) === true) {
                     for (var k in data.Images[j].BlockDeviceMappings) {
+                        if ('Ebs' in data.Images[j].BlockDeviceMappings[k]) {
                         snap = data.Images[j].BlockDeviceMappings[k].Ebs.SnapshotId;
+                        console.log(imagename);
                         console.log(snap);
                         var snapparams = {
                             SnapshotId: snap
@@ -82,6 +84,7 @@ ec2.describeImages({
                             if (err) console.log(err, err.stack); // an error occurred
                             else console.log("Snapshot Deleted"); // successful response
                         });
+                        }
                     }
                 }
             }
