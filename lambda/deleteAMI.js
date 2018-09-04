@@ -75,7 +75,6 @@ ec2.describeImages({
                     for (var k in data.Images[j].BlockDeviceMappings) {
                         if ('Ebs' in data.Images[j].BlockDeviceMappings[k]) {
                         snap = data.Images[j].BlockDeviceMappings[k].Ebs.SnapshotId;
-                        console.log(imagename);
                         console.log(snap);
                         var snapparams = {
                             SnapshotId: snap
