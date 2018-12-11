@@ -4,7 +4,7 @@ A simple AWS lambda project to help automate creation and deletion of AMIs. The 
 ## Motivation
 Creating an AMI automatically snapshots all the associated EBS volumes for that instance. This makes instance recovery much more reliable and faster. A daily or weekly backup schedule is recommended for instances and to make sure you have a backup if ever needed. The system also removes the automatically created AMIs and any associated snapshots as per the settings.
 
-Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag AutoDigiNoReboot with value true if want to avoid rebooting that instance.
+Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag BackupNoReboot with value true if want to avoid rebooting that instance.
 
 ## Setup / Installation of the Lambda script (one time setup)
 
@@ -36,9 +36,9 @@ Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/2-edit-tags.png)
 
 3) Set the three tags with the following Keys & Value
-    a) Key: AutoDigiBackup with Value: yes. This marks the instances that need to be backed up.
-    b) Key: AutoDigiBackupRetentionDays with Value: from 1 to as many days as you want the backup to be stored.
-    c) Key: AutoDigiBackupSchedule with Value: * (for every day) or a mix of number from 0 (Sunday), 1 (Monday) and all the way to 6 (Saturday). You can set value to say 012 which means run on Sunday, Monday and Tuesday. You can set just 6 to run only on Saturday.
+    a) Key: Backup with Value: yes. This marks the instances that need to be backed up.
+    b) Key: BackupRetentionDays with Value: from 1 to as many days as you want the backup to be stored.
+    c) Key: BackupSchedule with Value: * (for every day) or a mix of number from 0 (Sunday), 1 (Monday) and all the way to 6 (Saturday). You can set value to say 012 which means run on Sunday, Monday and Tuesday. You can set just 6 to run only on Saturday.
     
 ![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/3-a-5dayRetension-1234DaysRun.png)
 
