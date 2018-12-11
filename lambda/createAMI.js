@@ -1,15 +1,14 @@
 //Init AWS
 var aws = require('aws-sdk');  
-aws.config.region = 'eu-west-1'; //Change this to the region you like
 var ec2 = new aws.EC2();  
 
 //Variables for the script
 //Changes below are not required but if you do change, then change to match delete and create lambda scripts.
 const keyForEpochMakerinAMI = "DATETODEL-";
-const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
-const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionDays"; //accepts numbers like 5 or 10 or 22 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupSchedule"; //accepts day of week * / 0,1,2,3,4,5,6
-const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
+const keyForInstanceTagToBackup = "Backup"; //looks for string yes
+const keyForInstanceTagDurationBackup = "BackupRetentionDays"; //accepts numbers like 5 or 10 or 22 and so on.
+const keyForInstanceTagScheduledDays = "BackupSchedule"; //accepts day of week * / 0,1,2,3,4,5,6
+const keyForInstanceTagNoReboot = "BackupNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
 
 //returns true or false based on tag value 
 function checkIfBackupNeedsToRunToday(tagScheduleDays){
@@ -19,7 +18,7 @@ function checkIfBackupNeedsToRunToday(tagScheduleDays){
         }
 
     var today=new Date();
-    var dayOfWeek = today.getDay(); //this will be 0 for Sunday and upto 6 for Saturday.
+    var dayOfWeek = today.getDay(); //this will be 0 for Sunday and up to 6 for Saturday.
     console.log("Should system process today? " + tagScheduleDays.includes(dayOfWeek));
     return tagScheduleDays.includes(dayOfWeek);
 }
@@ -78,7 +77,7 @@ exports.handler = function(event, context) {
                         ec2.createImage(imageparams, function(err, data) {
                             if (err) console.log(err, err.stack);
                             else {
-                                image = data.ImageId;
+                                var image = data.ImageId;
                                 console.log(image);
                                 var tagparams = {
                                     Resources: [image],

@@ -1,6 +1,5 @@
 //Init AWS
 var aws = require('aws-sdk');  
-aws.config.region = 'eu-west-1'; //Change this to the region you like
 var ec2 = new aws.EC2();  
 
 //Variables for the script
@@ -48,8 +47,8 @@ ec2.describeImages({
     if (err) console.log(err, err.stack);
     else {
         for (var j in data.Images) {
-            imagename = data.Images[j].Name
-            imageid = data.Images[j].ImageId
+            var imagename = data.Images[j].Name
+            var imageid = data.Images[j].ImageId
 
             if (checkIfAMIneedsDeleting(imagename) === true) {
                 console.log("image that is going to be deregistered: ", imagename);
@@ -74,7 +73,7 @@ ec2.describeImages({
                 if (checkIfAMIneedsDeleting(imagename) === true) {
                     for (var k in data.Images[j].BlockDeviceMappings) {
                         if ('Ebs' in data.Images[j].BlockDeviceMappings[k]) {
-                        snap = data.Images[j].BlockDeviceMappings[k].Ebs.SnapshotId;
+                        var snap = data.Images[j].BlockDeviceMappings[k].Ebs.SnapshotId;
                         console.log(snap);
                         var snapparams = {
                             SnapshotId: snap
