@@ -7,21 +7,8 @@ var ec2 = new aws.EC2();
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForInstanceTagToBackup = "Backup"; //looks for string yes
 const keyForInstanceTagDurationBackup = "BackupRetentionDays"; //accepts numbers like 5 or 10 or 22 and so on.
-const keyForInstanceTagScheduledDays = "BackupSchedule"; //accepts day of week * / 0,1,2,3,4,5,6
 const keyForInstanceTagNoReboot = "BackupNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
 
-//returns true or false based on tag value 
-function checkIfBackupNeedsToRunToday(tagScheduleDays){
-    tagScheduleDays = tagScheduleDays.trim(); //just removing accidental spaces by user.
-        if(tagScheduleDays === "*"){
-            return true; //all days so go ahead
-        }
-
-    var today=new Date();
-    var dayOfWeek = today.getDay(); //this will be 0 for Sunday and up to 6 for Saturday.
-    console.log("Should system process today? " + tagScheduleDays.includes(dayOfWeek));
-    return tagScheduleDays.includes(dayOfWeek);
-}
 
 //Lambda handler
 exports.handler = function(event, context) { 
@@ -48,10 +35,7 @@ exports.handler = function(event, context) {
                         }
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagDurationBackup){
                             backupRetentionDaysforAMI = parseInt(data.Reservations[i].Instances[j].Tags[k].Value);
-                        }
-                        if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagScheduledDays){
-                            backupRunTodayCheck = data.Reservations[i].Instances[j].Tags[k].Value;
-                        }         
+                        }        
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagNoReboot){
                             if(data.Reservations[i].Instances[j].Tags[k].Value == "true"){
                                 noReboot = true;
@@ -59,16 +43,15 @@ exports.handler = function(event, context) {
                         }                        
                     }
                     //cant find when to delete then dont proceed.
-                    if((backupRetentionDaysforAMI < 1) || (checkIfBackupNeedsToRunToday(backupRunTodayCheck) === false)){
-                        console.log("Skipping instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));
+                    if(backupRetentionDaysforAMI < 1){
+                        console.log("Skipping instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));
                     }else{
-                        console.log("Processing instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));                        
+                        console.log("Processing instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));                        
                         var genDate = new Date();  
                         genDate.setDate(genDate.getDate() + backupRetentionDaysforAMI); //days that are required to be held
                         var imageparams = {
                             InstanceId: instanceid,
                             Name: name + "_" + keyForEpochMakerinAMI + genDate.getTime(),
-                            // NoReboot: true - Decided based on parameter from tag
                         };
                         if(noReboot == true){
                             imageparams["NoReboot"] = true;
