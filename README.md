@@ -6,47 +6,65 @@ Creating an AMI automatically snapshots all the associated EBS volumes for that 
 
 Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag BackupNoReboot with value true if want to avoid rebooting that instance.
 
-## Setup / Installation of the Lambda script (one time setup)
+## Setup / Installation of the Lambda script
 
-1) Setting up the Lambda script by opening the Lambda console
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/1-lambda-select-blank.png)
+1) Go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda) and click _Create function_.
+![](./docs/screenshots/1-create-function.png)
 
-2) Select "CloudWatch Events - Schedule" and click Next
 
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/2-select-cloudwatch-events-lambda.png)
+2) Name the function and select _Create a custom role_.
+![](./docs/screenshots/2-create-custom-role.png)
 
-3) Select a schedule you like to setup. Ideally the script has to run every day
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/3-setup-schedule.png)
+3) Give the custom role a name and paste the contents of [roles.json](./roles/roles.json) into the edit box.
+![](./docs/screenshots/3-edit-custom-role.png)
 
-4) Paste the script for [createAMI.js](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/lambda/createAMI.js)
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/4-setup-script.png)
+4) Now the function has been created, and you'll be presented with the lambda configuration screen.
+![](./docs/screenshots/4-function-created.png)
 
-5) Create a new role and paste the [roles/roles.json](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/roles/roles.json) also increase timeout.
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/lambda/5-setup-role-next.png)
+5) Scroll down to the code editor, and remove the stub code you see in the editor.
+![](./docs/screenshots/5-select-code.png)
 
-6) Save this and follow step above again now using [deleteAMI.js](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/lambda/deleteAMI.js).
+6) Paste the contents of [createAMI.js](./lambda/createAMI.js) into the edit box.  
+![](./docs/screenshots/6-paste-createAMI.png)
 
-## Setting the tags for EC2 instances (repeat for each instance) 
+7) Scroll down further and modify the *Basic Settings*.   
+Provide a description and set the timeout to 5 minutes.
+![](./docs/screenshots/7-modify-basic-settings.png)
 
-1) Login to your AWS console and open the EC2 section. Then select the instance
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/1-aws-ec2-console.png)
+8) Scroll back to the top and click _Save_.  
+Add a trigger by selecting _CloudWatch Event_.
+![](./docs/screenshots/8-save-and-set-trigger.png)
 
-2) Select the add or edit tags as per settings
+9) To set up the trigger select _Create a new rule_.
+![](./docs/screenshots/9-create-new-rule.png)
 
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/2-edit-tags.png)
+10) Configure the Rule:
+* Provide a rule name and description.
+* Set the event pattern or schedule.
+  * The cron expression showed below will run at 2AM every day.
+* Finish by clicking _Add_ at the bottom.
+![](./docs/screenshots/10-configure-rule.png)
 
-3) Set the three tags with the following Keys & Value
-    a) Key: Backup with Value: yes. This marks the instances that need to be backed up.
-    b) Key: BackupRetentionDays with Value: from 1 to as many days as you want the backup to be stored.
-    c) Key: BackupSchedule with Value: * (for every day) or a mix of number from 0 (Sunday), 1 (Monday) and all the way to 6 (Saturday). You can set value to say 012 which means run on Sunday, Monday and Tuesday. You can set just 6 to run only on Saturday.
-    
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/3-a-5dayRetension-1234DaysRun.png)
+11) Success!  
+![](./docs/screenshots/11-finished-function.png)
 
-Example below is set to create the AMI every day
+12) Create a second function named deleteAMI.  
+Follow the same basic steps as above, but this time:
+* Use [deleteAMI.js](./deleteAMI.js)
+* Use the existing lambda Role.
+* Use the existing CloudWatch Rule.
 
-![](https://raw.githubusercontent.com/webdigi/AWS-AMI-Automated-Creation-Deletion/master/docs/screenshots/ec2/3-b-5dayRetention-Everyday.png)
+## Setting the tags for EC2 instances  
 
-Save the settings that are approriate for this instance and then save the tags. Please repeat steps 1-3 for all instances that you like to be included.
+Set the tags on the instances you want backed up.  
+* **Backup**: yes 
+* **BackupRetentionDays**: a positive integer
+* **BackupNoReboot**: true (this tag is optional - reboot will happen unless the tag is present and value is true)
+
+For multiple instances it is easiest to use the Tag Editor.  
+![](./docs/screenshots/12-edit-tags.png)
+
+
 
 ## Notes
 
