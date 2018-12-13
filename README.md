@@ -4,15 +4,16 @@ A simple AWS lambda project to help automate creation and deletion of AMIs. The 
 ## Motivation
 Creating an AMI automatically snapshots all the associated EBS volumes for that instance. This makes instance recovery much more reliable and faster. A daily or weekly backup schedule is recommended for instances and to make sure you have a backup if ever needed. The system also removes the automatically created AMIs and any associated snapshots as per the settings.
 
-Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag BackupNoReboot with value true if want to avoid rebooting that instance.
+Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a tag BackupNoReboot with value true if want to avoid rebooting that instance.  
+Update December 2018 - Replaced screenshots to reflect AWS Console changes.
 
 ## Setup / Installation of the Lambda script
 
-1) Go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda) and click _Create function_.
+1) Go to the [AWS Lambda Console](https://console.aws.amazon.com/lambda) and click _Create function_.  
 ![](./docs/screenshots/1-create-function.png)
 
 
-2) Name the function and select _Create a custom role_.
+2) Name the function and select _Create a custom role_.  
 ![](./docs/screenshots/2-create-custom-role.png)
 
 3) Give the custom role a name and paste the contents of [roles.json](./roles/roles.json) into the edit box.
@@ -27,22 +28,22 @@ Update 31 March 2017 - Added feature to prevent reboot while creating AMI. Add a
 6) Paste the contents of [createAMI.js](./lambda/createAMI.js) into the edit box.  
 ![](./docs/screenshots/6-paste-createAMI.png)
 
-7) Scroll down further and modify the *Basic Settings*.   
-Provide a description and set the timeout to 5 minutes.
+7) Scroll down further and modify the *Basic Settings*.  
+Provide a description and set the timeout to 5 minutes.  
 ![](./docs/screenshots/7-modify-basic-settings.png)
 
 8) Scroll back to the top and click _Save_.  
-Add a trigger by selecting _CloudWatch Event_.
+Add a trigger by selecting _CloudWatch Event_.  
 ![](./docs/screenshots/8-save-and-set-trigger.png)
 
-9) To set up the trigger select _Create a new rule_.
+9) To set up the trigger select _Create a new rule_.  
 ![](./docs/screenshots/9-create-new-rule.png)
 
 10) Configure the Rule:
 * Provide a rule name and description.
 * Set the event pattern or schedule.
   * The cron expression showed below will run at 2AM every day.
-* Finish by clicking _Add_ at the bottom.
+* Finish by clicking _Add_ at the bottom.  
 ![](./docs/screenshots/10-configure-rule.png)
 
 11) Success!  
