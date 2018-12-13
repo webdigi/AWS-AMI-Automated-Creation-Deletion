@@ -1,63 +1,79 @@
-//Init AWS
+// Init AWS
 var aws = require('aws-sdk');  
 var ec2 = new aws.EC2();  
+// OPTION - limit by region
+// aws.config.region = 'eu-west-1';
 
-//Variables for the script
-//Changes below are not required but if you do change, then change to match delete and create lambda scripts.
+// Variables for the script
+// Changes below are not required but if you do change, then change to match
+// delete and create lambda scripts.
 const keyForEpochMakerinAMI = "DATETODEL-";
 const keyForAMIsToDelete = "DeleteBackupsAutoOn"; 
 
-//Epoch time from the AMI name is used to check if deletion is required.
-//Epoch time is used as it passes AWS AMI naming allowed patterns
-function checkIfAMIneedsDeleting(imagename){
-    //Extract deletion date & time from image name 
-    var epochImageDeleteDate = parseInt(imagename.substr(imagename.indexOf(keyForEpochMakerinAMI) + keyForEpochMakerinAMI.length));
-    //Changing slightly so delete and create can run on same cloudwatch scheduled event
-    //20 minutes = 20 * 60 seconds * 1000 milliseconds
+// Epoch time from the AMI name is used to check if deletion is required.
+// Epoch time is used as it passes AWS AMI naming allowed patterns
+function checkIfAMIneedsDeleting(imageName){
+
+    // Extract deletion date & time from image name
+    var epochImageDeleteDate = parseInt(imageName.substr(imageName.indexOf(keyForEpochMakerinAMI) + keyForEpochMakerinAMI.length));
+    
+    // Changing slightly so delete and create can run on same cloudwatch event
+    // 20 minutes = 20 * 60 seconds * 1000 milliseconds
     epochImageDeleteDate = epochImageDeleteDate - (20 * 60 * 1000);
     
-    var genTimeNow = new Date(); 
-
-    //check if epoch time for deletion has been reached
-    if(epochImageDeleteDate > 0 && epochImageDeleteDate > genTimeNow.getTime()){
-        console.log("Not yet time to delete " + imagename);
-        return false; //not yet time to delete
-    }else if(epochImageDeleteDate > 0){
-        console.log("Time to delete " + imagename);
-        return true;
+    var timeNow = new Date().getTime(); 
+    
+    // check if epoch time for deletion has been reached
+    if(epochImageDeleteDate > 0) {
+    	if(epochImageDeleteDate > timeNow){
+    		console.log("Not yet time to delete " + imageName);
+    	}else {
+    		console.log("Time to delete " + imageName);
+            return true;
+    	}
     }
 
     return false;
 }
 
-//Lambda handler
+// Lambda handler
 exports.handler = function(event, context) {  
 ec2.describeImages({  
     Owners: [
         'self'
     ],
-    Filters: [{
-        Name: 'tag:' + keyForAMIsToDelete,
-        Values: [
-            'yes'
-        ]
-    }]
-
+    Filters: [
+    	{
+	        Name: 'tag:' + keyForAMIsToDelete,
+	        Values: [
+	            'yes'
+	        ]
+	    },
+	    /*
+	    // OPTION - Add additional filters 
+	    {
+	        Name: 'tag:someOtherTagName',
+	        Values: [
+	            'someValue'
+	        ]
+	    }
+    	*/
+	]
 }, function(err, data) {
     if (err) console.log(err, err.stack);
     else {
-        for (var j in data.Images) {
-            var imagename = data.Images[j].Name
-            var imageid = data.Images[j].ImageId
+    	var imagesToDelete = [];
+    	
+        for (var index in data.Images) {
+            var imagename = data.Images[index].Name
+            var imageid = data.Images[index].ImageId
 
             if (checkIfAMIneedsDeleting(imagename) === true) {
-                console.log("image that is going to be deregistered: ", imagename);
-                console.log("image id: ", imageid);
-
+                imagesToDelete.push(data.Images[index]);
                 var deregisterparams = {
                     ImageId: imageid
                 };
-                console.log(deregisterparams);
+
                 ec2.deregisterImage(deregisterparams, function(err, data01) {
                     if (err) console.log(err, err.stack); // an error occurred
                     else {
@@ -67,22 +83,19 @@ ec2.describeImages({
                 });
             }
         }
-        setTimeout(function() {
-            for (var j in data.Images) {
-                imagename = data.Images[j].Name
-                if (checkIfAMIneedsDeleting(imagename) === true) {
-                    for (var k in data.Images[j].BlockDeviceMappings) {
-                        if ('Ebs' in data.Images[j].BlockDeviceMappings[k]) {
-                        var snap = data.Images[j].BlockDeviceMappings[k].Ebs.SnapshotId;
-                        console.log(snap);
+        setTimeout(function() {         
+        	for (var imageIndex in imagesToDelete) {
+                for (var j in imagesToDelete[imageIndex].BlockDeviceMappings) {                	
+                	var blockDevice = imagesToDelete[imageIndex].BlockDeviceMappings[j];
+                	if ('Ebs' in blockDevice) {
                         var snapparams = {
-                            SnapshotId: snap
+                            SnapshotId: blockDevice.Ebs.SnapshotId
                         };
+
                         ec2.deleteSnapshot(snapparams, function(err, data) {
                             if (err) console.log(err, err.stack); // an error occurred
                             else console.log("Snapshot Deleted"); // successful response
                         });
-                        }
                     }
                 }
             }
