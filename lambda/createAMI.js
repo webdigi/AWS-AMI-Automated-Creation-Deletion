@@ -1,39 +1,38 @@
-//Init AWS
+// Init AWS
 var aws = require('aws-sdk');  
-aws.config.region = 'eu-west-1'; //Change this to the region you like
 var ec2 = new aws.EC2();  
+// OPTION - limit by region
+// aws.config.region = 'eu-west-1';
 
-//Variables for the script
-//Changes below are not required but if you do change, then change to match delete and create lambda scripts.
+// Variables for the script
+// Changes below are not required but if you do change, then change to match delete and create lambda scripts.
 const keyForEpochMakerinAMI = "DATETODEL-";
-const keyForInstanceTagToBackup = "AutoDigiBackup"; //looks for string yes
-const keyForInstanceTagDurationBackup = "AutoDigiBackupRetentionDays"; //accepts numbers like 5 or 10 or 22 and so on.
-const keyForInstanceTagScheduledDays = "AutoDigiBackupSchedule"; //accepts day of week * / 0,1,2,3,4,5,6
-const keyForInstanceTagNoReboot = "AutoDigiNoReboot"; //if true then it wont reboot. If not present or set to false then it will reboot.
+const keyForInstanceTagToBackup = "Backup"; // looks for string yes
+const keyForInstanceTagDurationBackup = "BackupRetentionDays"; // accepts numbers like 5 or 10 or 22 and so on.
+const keyForInstanceTagNoReboot = "BackupNoReboot"; // if true then it wont reboot. If not present or set to false then it will reboot.
 
-//returns true or false based on tag value 
-function checkIfBackupNeedsToRunToday(tagScheduleDays){
-    tagScheduleDays = tagScheduleDays.trim(); //just removing accidental spaces by user.
-        if(tagScheduleDays === "*"){
-            return true; //all days so go ahead
-        }
 
-    var today=new Date();
-    var dayOfWeek = today.getDay(); //this will be 0 for Sunday and upto 6 for Saturday.
-    console.log("Should system process today? " + tagScheduleDays.includes(dayOfWeek));
-    return tagScheduleDays.includes(dayOfWeek);
-}
-
-//Lambda handler
+// Lambda handler
 exports.handler = function(event, context) { 
     
     var instanceparams = {
-        Filters: [{
-            Name: 'tag:' + keyForInstanceTagToBackup,
-            Values: [
-                'yes'
-            ]
-        }]
+        Filters: [
+        	{
+	            Name: 'tag:' + keyForInstanceTagToBackup,
+	            Values: [
+	                'yes'
+	            ]
+	        },
+	        /*
+		    // OPTION - Add additional filters 
+		    {
+		        Name: 'tag:someOtherTagName',
+		        Values: [
+		            'someValue'
+		        ]
+		    }
+	    	*/
+        ]
     };
     
     ec2.describeInstances(instanceparams, function(err, data) {
@@ -49,27 +48,23 @@ exports.handler = function(event, context) {
                         }
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagDurationBackup){
                             backupRetentionDaysforAMI = parseInt(data.Reservations[i].Instances[j].Tags[k].Value);
-                        }
-                        if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagScheduledDays){
-                            backupRunTodayCheck = data.Reservations[i].Instances[j].Tags[k].Value;
-                        }         
+                        }        
                         if(data.Reservations[i].Instances[j].Tags[k].Key == keyForInstanceTagNoReboot){
                             if(data.Reservations[i].Instances[j].Tags[k].Value == "true"){
                                 noReboot = true;
                             }
                         }                        
                     }
-                    //cant find when to delete then dont proceed.
-                    if((backupRetentionDaysforAMI < 1) || (checkIfBackupNeedsToRunToday(backupRunTodayCheck) === false)){
-                        console.log("Skipping instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));
+                    // cant find when to delete then dont proceed.
+                    if(backupRetentionDaysforAMI < 1){
+                        console.log("Skipping instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));
                     }else{
-                        console.log("Processing instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " backupRunTodayCheck: " + backupRunTodayCheck + " checkIfBackupNeedsToRunToday:" + checkIfBackupNeedsToRunToday(backupRunTodayCheck) + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));                        
+                        console.log("Processing instance Name: " + name + " backupRetentionDaysforAMI: " + backupRetentionDaysforAMI + " (backupRetentionDaysforAMI > 0)" + (backupRetentionDaysforAMI > 0));                        
                         var genDate = new Date();  
-                        genDate.setDate(genDate.getDate() + backupRetentionDaysforAMI); //days that are required to be held
+                        genDate.setDate(genDate.getDate() + backupRetentionDaysforAMI); // days that are required to be held
                         var imageparams = {
                             InstanceId: instanceid,
                             Name: name + "_" + keyForEpochMakerinAMI + genDate.getTime(),
-                            // NoReboot: true - Decided based on parameter from tag
                         };
                         if(noReboot == true){
                             imageparams["NoReboot"] = true;
@@ -78,7 +73,7 @@ exports.handler = function(event, context) {
                         ec2.createImage(imageparams, function(err, data) {
                             if (err) console.log(err, err.stack);
                             else {
-                                image = data.ImageId;
+                                var image = data.ImageId;
                                 console.log(image);
                                 var tagparams = {
                                     Resources: [image],
