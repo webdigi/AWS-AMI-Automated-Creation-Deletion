@@ -51,7 +51,7 @@ Add a trigger by selecting _CloudWatch Event_.
 
 12) Create a second function named deleteAMI.  
 Follow the same basic steps as above, but this time:
-* Use [deleteAMI.js](./deleteAMI.js)
+* Use [deleteAMI.js](./lambda/deleteAMI.js)
 * Use the existing lambda Role.
 * Use the existing CloudWatch Rule.
 
